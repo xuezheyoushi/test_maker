@@ -13,7 +13,7 @@ class Test:
         self.stats = []
 
     def generate_copy(self, num_copies):
-        for i in num_copies:
+        for i in range(num_copies):
             copy = Copy(len(self.copies), self)
             self.copies.append(copy)
 
@@ -99,9 +99,8 @@ class Copy:
 if __name__ == '__main__':
     test_list = []
     new_test = Test("Sample Test 1", test_list)
-    print(new_test.test_id, new_test.test_name)
-    new_test.generate_copy()
-    print(new_test.copies[0])
+    new_test.generate_copy(2)
+
 
 
 # im = Image.open("format.png")

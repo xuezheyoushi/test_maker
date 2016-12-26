@@ -28,9 +28,9 @@ class RawPhoto:
             # Approximate contours to polygons
             approximation = cv2.approxPolyDP(contours0[i], 4, True)
             # Has 4 sides? Convex?
-            if (len(approximation) != 4):
+            if len(approximation) != 4:
                 continue
-            if (not cv2.isContourConvex(approximation)):
+            if not cv2.isContourConvex(approximation):
                 continue
             approximations[cv2.contourArea(approximation)] = approximation
         # Get largest rectangles
@@ -47,9 +47,9 @@ class RawPhoto:
                                   [raw_refs[3][0], raw_refs[3][1]]])
             key_pts = np.float32([[764, 307], [49, 307],
                                   [49, 1128], [764, 1128]])
-            M = cv2.getPerspectiveTransform(ref_pts, key_pts)
-            paper = cv2.warpPerspective(self.img, M, (875, 1240))
-            self.paper_objs.append(PaperScan(paper, i))
+            trans_matrix = cv2.getPerspectiveTransform(ref_pts, key_pts)
+            paper = cv2.warpPerspective(self.img, trans_matrix, (875, 1240))
+            self.paper_objs.append(PaperScan(paper))
         # Print warning if not all detected
         if i != (num_paper - 1):
             print("WARNING: %d papers not detected." % (num_paper - 1 - i))
@@ -85,7 +85,7 @@ class RawPhoto:
         r_id = brightnesses.index(min(brightnesses))
         transform = {0: B, 1: C, 2: D, 3: A}
         return (transform[r_id], transform[(r_id + 1) % 4],
-                transform[(r_id + 2) %4], transform[(r_id + 3) % 4])
+                transform[(r_id + 2) % 4], transform[(r_id + 3) % 4])
 
 
 class PaperScan:
@@ -97,15 +97,15 @@ class PaperScan:
     paper_id = None
     answers = []
 
-    def __init__(self, paper_img, i):
+    def __init__(self, paper_img):
         self.img = paper_img
         self.th_inv = cv2.adaptiveThreshold(paper_img, 255,
                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             1, 29, 8)
         self.th = 255 - self.th_inv
-        self.read_datamatrix(i)
+        self.read_datamatrix()
 
-    def read_datamatrix(self, i):
+    def read_datamatrix(self):
         datamatrix_region = self.th[40:140, 740:840]
         content = decode(datamatrix_region, timeout=1)[0][0]
         self.test_id = content[:5]

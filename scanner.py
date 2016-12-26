@@ -2,100 +2,120 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import pylab as pl
-
-NAME = "source2"
-
-# class RawImg:
-#
-#     def __init__(self, img):
-#         self.cv2.imread()
-
-im = cv2.imread(NAME+".jpeg", 0)
-
-th = cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                            1, 29, 8)
+from pylibdmtx.pylibdmtx import decode
 
 
+class RawPhoto:
 
-# plt.subplot(1,3,1), plt.imshow(im, "gray")
-plt.subplot(1,2,1), plt.imshow(th, "gray")
-cv2.imwrite(NAME+"-b.jpeg", th)
+    img = None
+    th = None
+    paper_objs = []
 
-contours0, hierarchy = cv2.findContours(th, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-h, w = im.shape[:2]
-candidates = im.copy()
+    def __init__(self, raw_img):
+        self.img = raw_img
 
-approximations = {}
+    def get_papers(self, num_paper):
+        # Take threshold of the image
+        self.th = cv2.adaptiveThreshold(self.img, 255,
+                                        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                        1, 29, 8)
+        # Find contours
+        contours0, hir = cv2.findContours(self.th, cv2.RETR_LIST,
+                                          cv2.CHAIN_APPROX_SIMPLE)
+        # Approximate all rectangles
+        approximations = {}
+        for i in range(len(contours0)):
+            # Approximate contours to polygons
+            approximation = cv2.approxPolyDP(contours0[i], 4, True)
+            # Has 4 sides? Convex?
+            if (len(approximation) != 4):
+                continue
+            if (not cv2.isContourConvex(approximation)):
+                continue
+            approximations[cv2.contourArea(approximation)] = approximation
+        # Get largest rectangles
+        sizes = sorted(list(approximations.keys()))
+        for i in range(num_paper):
+            # Break if rectangle clearly not big enough
+            if sizes[-i-1] < 0.7 * sizes[-1]:
+                break
+            approximation = approximations[sizes[-i-1]]
+            raw_refs = self.get_refs(approximation)
+            ref_pts = np.float32([[raw_refs[0][0], raw_refs[0][1]],
+                                  [raw_refs[1][0], raw_refs[1][1]],
+                                  [raw_refs[2][0], raw_refs[2][1]],
+                                  [raw_refs[3][0], raw_refs[3][1]]])
+            key_pts = np.float32([[764, 307], [49, 307],
+                                  [49, 1128], [764, 1128]])
+            M = cv2.getPerspectiveTransform(ref_pts, key_pts)
+            paper = cv2.warpPerspective(self.img, M, (875, 1240))
+            self.paper_objs.append(PaperScan(paper, i))
+        # Print warning if not all detected
+        if i != (num_paper - 1):
+            print("WARNING: %d papers not detected." % (num_paper - 1 - i))
 
-for i in range(len(contours0)):
-    # aproximate countours to polygons
-    approximation = cv2.approxPolyDP(contours0[i], 4, True)
+    def get_refs(self, approx):
+        # Define cornor points
+        A = approx[0][0]
+        B = approx[1][0]
+        C = approx[2][0]
+        D = approx[3][0]
+        # Define center points of edges
+        E = (int((A[0] + B[0]) / 2), int((A[1] + B[1]) / 2))
+        F = (int((B[0] + C[0]) / 2), int((B[1] + C[1]) / 2))
+        G = (int((C[0] + D[0]) / 2), int((C[1] + D[1]) / 2))
+        H = (int((D[0] + A[0]) / 2), int((D[1] + A[1]) / 2))
+        # Define ref points
+        I = int(G[0] + 1.053 * (E[0] - G[0])), int(G[1] + 1.053 * (E[1] - G[1]))
+        J = int(H[0] + 1.053 * (F[0] - H[0])), int(H[1] + 1.053 * (F[1] - H[1]))
+        K = int(E[0] + 1.053 * (G[0] - E[0])), int(E[1] + 1.053 * (G[1] - E[1]))
+        L = int(F[0] + 1.053 * (H[0] - F[0])), int(F[1] + 1.053 * (H[1] - F[1]))
+        # Check brightnesses
+        brightnesses = []
+        offset = int(0.012 * ((A[0] - B[0]) ** 2 + (A[1] - B[1]) ** 2) ** 0.5)
+        for pt in [I, J, K, L]:
+            i_base = pt[0] - offset
+            j_base = pt[1] - offset
+            brightness = 0
+            for i in range(offset * 2):
+                for j in range(offset * 2):
+                    brightness += self.img[j_base + j][i_base + i]
+            brightnesses.append(brightness)
+        # Orientate rectangle
+        r_id = brightnesses.index(min(brightnesses))
+        transform = {0: B, 1: C, 2: D, 3: A}
+        return (transform[r_id], transform[(r_id + 1) % 4],
+                transform[(r_id + 2) %4], transform[(r_id + 3) % 4])
 
-    # has the polygon 4 sides?
-    if (not (len(approximation) == 4)):
-        continue
-    # is the polygon convex ?
-    if (not cv2.isContourConvex(approximation)):
-        continue
 
-    approximations[cv2.contourArea(approximation)] = approximation
+class PaperScan:
 
-sizes = sorted(list(approximations.keys()))
+    img = None
+    th = None
+    th_inv = None
+    test_id = None
+    paper_id = None
+    answers = []
 
-NUM_PAPERS = 2
+    def __init__(self, paper_img, i):
+        self.img = paper_img
+        cv2.imwrite("test%d.png" % i, paper_img)
+        self.th_inv = cv2.adaptiveThreshold(paper_img, 255,
+                                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                            1, 29, 8)
+        self.th = 255 - self.th_inv
+        self.read_datamatrix(i)
 
-for i in range(NUM_PAPERS):
-    approximation = approximations[sizes[-i-1]]
-    print(approximation)
-    print("$$$$$$")
-    for j in range(len(approximation)):
-        cv2.line(candidates,
-                (approximation[(j%4)][0][0],   approximation[(j%4)][0][1]),
-                (approximation[(j+1)%4][0][0], approximation[(j+1)%4][0][1]),
-                (255, 255, 255), 2)
+    def read_datamatrix(self, i):
+        datamatrix_region = self.th[40:140, 740:840]
+        content = decode(datamatrix_region, timeout=1)[0][0]
+        self.test_id = content[:5]
+        self.paper_id = content[5:]
 
-
-
-#show image
-plt.subplot(1,2,2), plt.imshow(candidates, "gray")
-
-plt.show()
+    def read_answer(self, num_questions):
+        pass
 
 
-    # import cv2
-# import numpy as np
-# from matplotlib import pyplot as plt
-#
-# img = cv2.imread('source1-b.png',0)
-# img2 = img.copy()
-# template = cv2.imread('ref1.png',0)
-# w, h = template.shape[::-1]
-#
-# # All the 6 methods for comparison in a list
-# methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-#             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
-#
-# for meth in methods:
-#     img = img2.copy()
-#     method = eval(meth)
-#
-#     # Apply template Matching
-#     res = cv2.matchTemplate(img,template,method)
-#     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-#
-#     # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-#     if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-#         top_left = min_loc
-#     else:
-#         top_left = max_loc
-#     bottom_right = (top_left[0] + w, top_left[1] + h)
-#
-#     cv2.rectangle(img,top_left, bottom_right, 255, 2)
-#
-#     plt.subplot(121),plt.imshow(res,cmap = 'gray')
-#     plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-#     plt.subplot(122),plt.imshow(img,cmap = 'gray')
-#     plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-#     plt.suptitle(meth)
-#
-#     plt.show()
+test_img = cv2.imread("source6.jpeg", 0)
+rp = RawPhoto(test_img)
+rp.get_papers(8)

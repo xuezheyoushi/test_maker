@@ -99,7 +99,7 @@ class Copy:
 if __name__ == '__main__':
     test_list = []
     new_test = Test("Sample Test 1", test_list)
-    new_test.generate_copy(2)
+    new_test.generate_copy(8)
 
 
 

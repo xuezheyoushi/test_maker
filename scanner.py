@@ -99,7 +99,6 @@ class PaperScan:
 
     def __init__(self, paper_img, i):
         self.img = paper_img
-        cv2.imwrite("test%d.png" % i, paper_img)
         self.th_inv = cv2.adaptiveThreshold(paper_img, 255,
                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             1, 29, 8)

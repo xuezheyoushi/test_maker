@@ -96,9 +96,11 @@ class PaperScan:
     test_id = None
     paper_id = None
     answers = []
+    num_questions = 60
 
-    def __init__(self, paper_img):
+    def __init__(self, paper_img, num_questions=60):
         self.img = paper_img
+        self.num_questions = num_questions
         self.th_inv = cv2.adaptiveThreshold(paper_img, 255,
                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             1, 29, 8)
@@ -111,10 +113,14 @@ class PaperScan:
         self.test_id = content[:5]
         self.paper_id = content[5:]
 
-    def read_answer(self, num_questions):
+    def read_answers(self):
+        pass
+
+    def segment(selfs):
         pass
 
 
-test_img = cv2.imread("source6.jpeg", 0)
-rp = RawPhoto(test_img)
-rp.get_papers(8)
+if __name__ == "__main__":
+    test_img = cv2.imread("source6.jpeg", 0)
+    rp = RawPhoto(test_img)
+    rp.get_papers(8)

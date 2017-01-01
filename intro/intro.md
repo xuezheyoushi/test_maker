@@ -31,7 +31,7 @@
 * 设计了答题卡模板和答题卡生成器([代码](https://github.com/sibowsb/test_maker/blob/master/mcas_maker.py))，包括考试名称、二维码、ID
 * 二相化图片（这部分以后的代码都在[这里](https://github.com/sibowsb/test_maker/blob/master/scanner.py)）
     - 为了把一张原始的图片转化成我们可以deal with的数据，首先我们一般会把它简化成黑白二相的（就像我给我们寝室做的T恤那种，不是黑就是白，没有灰）。
-    - 如果用上次给你说的那种Photoshop上的简单threshold的话呢，我们很那把控那个threshold到底放在那里。如果threshold高了，有的文字也会被识别成背景；如果threshold低了，很多背景也会被当做是文字。每张图片的光照环境、背景都不一样，所以threshold很难把握。即使是在同一张图片里，因为我们一张图片有好几张答题卡，每张的光照环境又都不一样。因此如果用一个统一的threshold，即使我们针对每张图片都单独用某种方法计算出来一个最佳的threshold，还是会出现无法照顾到每张答题卡的问题，就像这样（注意左下和右上）：
+    - 如果用上次给你说的那种Photoshop上的简单threshold的话，我们很难把控那个threshold到底设成多少。如果threshold高了，有的文字也会被识别成背景；如果threshold低了，很多背景也会被当做是文字。每张图片的光照环境、背景都不一样，所以threshold很难把握。即使是在同一张图片里，因为我们一张图片有好几张答题卡，每张的光照环境又都不一样。因此如果用一个统一的threshold，即使我们针对每张图片都单独用某种方法计算出来一个最佳的threshold，还是会出现无法照顾到每张答题卡的问题，就像这样（注意左下和右上）：
     <img src="source.jpg" width="400">
     <img src="source-b.jpg" width="400">
     - 因此我用了一种叫做高斯自适应二相化（Adaptive Gaussian Thresholding）的方法。「自适应」的意思是我们把图片切成若干个小块，对每一个小块找出最合适的threshold，然后分别二相化。那么对于每一个小块我们是如何找出最合适的threshold的呢？我们是通过计算这个小块里的平均intensity（相当于亮度）作为我们的threshold。更具体地说，我们算的是加权平均数，权重以正态分布曲线给出所以叫做「高斯」，这并不重要。

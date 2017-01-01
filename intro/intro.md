@@ -27,8 +27,8 @@
     - 为了把一张原始的图片转化成我们可以deal with的数据，首先我们一般会把它简化成黑白二相的（就像我给我们寝室做的T恤那种，不是黑就是白，没有灰）。
     - 如果用上次给你说的那种Photoshop上的简单threshold的话呢，我们很那把控那个threshold到底放在那里。如果threshold高了，有的文字也会被识别成背景；如果threshold低了，很多背景也会被当做是文字。每张图片的光照环境、背景都不一样，所以threshold很难把握。即使是在同一张图片里，因为我们一张图片有好几张答题卡，每张的光照环境又都不一样。因此如果用一个统一的threshold，即使我们针对每张图片都单独用某种方法计算出来一个最佳的threshold，还是会出现无法照顾到每张答题卡的问题，就像这样（注意左下和右上）：
     
-    ![global threshold](source.jpg =250x)
-    ![global threshold](source-b.jpg = 250x)
+    <img src="source.jpg" width="400">
+    <img src="source-b.jpg" width="400">
 
     - 
 

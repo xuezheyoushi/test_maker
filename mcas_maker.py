@@ -100,25 +100,3 @@ if __name__ == '__main__':
     test_list = []
     new_test = Test("Sample Test 1", test_list)
     new_test.generate_copy(8)
-
-
-
-# im = Image.open("format.png")
-# helvetica = ImageFont.truetype("helvetica-bold.ttf", 80)
-# scp = ImageFont.truetype("source-code-pro-regular.ttf", 30)
-# draw = ImageDraw.Draw(im)
-#
-# draw.text((95,160), "Test 1", fill=0, font=helvetica)
-#
-# encoder = DataMatrixEncoder("Test Info")
-# encoder.save("datamatrix.png", cellsize=9)
-# datamatrix = Image.open("datamatrix.png")
-# xy = (1490, 80)
-# im.paste(datamatrix, (xy[0], xy[1], xy[0]+180, xy[1]+180))
-#
-# draw.text((1160,110), "   Test ID: 12321", fill=0, font=scp)
-# draw.text((1160,145), "  Paper ID:   001", fill=0, font=scp)
-# draw.text((1160,180), "Access PIN:  DFAS", fill=0, font=scp)
-#
-# im.show()
-# im.save("test_mcas.jpeg", "jpeg", quality=50)

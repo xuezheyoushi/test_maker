@@ -47,9 +47,13 @@
     <img scr="temp_matching.jpg" width = "600">
 * 截取内容
     - 接下来我们只需要简单地从按模板固定位置从图片上截取内容就可以了。我们截取学生班级姓名和答案，为了保险做一点偏移多截一点：
-    <img scr="ans-img-0.png" width = "60">
-    - 然后过滤掉边缘，只保留格子里面的内容：    
-    <img scr="ans-img-trim-0.png" width = "60">
+    
+    ![](ans-img-0.png)
+    
+    - 然后过滤掉边缘，只保留格子里面的内容：
+    
+    ![](ans-img-trim-0.png)
+    
     - 然后我们需要截出来单独的字母。如果有拉掉的话，我们用最右边的字母。这个我还没弄。
 * 识别字母
     - 再接下来就需要一些machine learning的东西来做字母识别了，大概会用到一个叫KNN（k-Nearest Neighbors）的算法，我也还在学。

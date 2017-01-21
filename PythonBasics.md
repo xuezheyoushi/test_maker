@@ -55,9 +55,9 @@ print("done")
 The execution of this program is:
 * `a` is assigned to be a list of course names
 * Iteration 0: course = "Math", the program prints "Math 101"
-* Iteration 1: course = "Math", the program prints "Physics 101"
-* Iteration 2: course = "Math", the program prints "Chemistry 101"
-* Iteration 3: course = "Math", the program prints "Biology 101"
+* Iteration 1: course = "Physics", the program prints "Physics 101"
+* Iteration 2: course = "Chemistry", the program prints "Chemistry 101"
+* Iteration 3: course = "Biology", the program prints "Biology 101"
 * The program prints "done"
 
 So the following is printed:
@@ -102,7 +102,26 @@ So the third, second, first, and zeroth (note that in Python we count from 0) ar
 But clearly, the original examples are more efficient.
 
 
+## Dictionary
+A dictionary is like a list, except that each of its element has a _key_ (i.e. a name) instead of an _index_. In other words, it is a set of key-value pairs. Its general structure is:
+```Python
+<var name> = {<key 1>: <value 1>,
+              <key 2>: <value 2>,
+              ...
+              <key n>: <value n>,
+```
 
+For example, the following is a dictionary that describes the students names and their IDs.
+```Python
+students = {10000001: "Andy Wang",
+            10000002: "Bill Anderson",
+            10000003: "Candy Ali"}
+```
 
+Then, if we just call
+```
+print(students[10000001])
+```
+`Andy Wang` will be printed.
 
-
+We can also construct a dictionary that maps 

@@ -5,6 +5,10 @@ import pylab as pl
 from pylibdmtx.pylibdmtx import decode
 
 
+NUM_OPTIONS = 5
+MARKED_THRESH = 1.5
+
+
 class RawPhoto:
 
     img = None
@@ -90,6 +94,10 @@ class RawPhoto:
 
 class PaperScan:
 
+    '''
+    This is the preprocessed single image for one test paper.
+    '''
+
     img = None
     th = None
     th_inv = None
@@ -99,6 +107,8 @@ class PaperScan:
     num_questions = 60
     name_img = None
     class_img = None
+    marked_ans = None
+
 
     def __init__(self, paper_img, num_questions=60):
         self.img = paper_img
@@ -130,6 +140,8 @@ class PaperScan:
             # cv2.imwrite("ans-img-trim-%d.png" % count, ans_img)
 
             h, w = ans_img.shape[:2]
+
+            # TODO: reconstruct shitty code below
 
             # Top
             flag = False
@@ -200,6 +212,34 @@ class PaperScan:
             ans_img = self.th_inv[up:down, left:right]
             self.ans_imgs.append(ans_img)
             cv2.imwrite("ans-img-%d.png" % i, ans_img)
+
+
+    def read_filled_answers(self):
+        for curr_img in self.ans_imgs:
+            h, w = curr_img.shape[:2]
+            partition_len = int(w / NUM_OPTIONS);
+            brightnesses = [0] * NUM_OPTIONS
+            for i in range(NUM_OPTIONS):
+                for j in range(h):
+                    begin_partition = partition_len * i
+                    end_partition = partition_len * (i + 1)
+                    for k in range(begin_partition, end_partition):
+                        for row in range(h):
+                            for col in range(partition_len):
+                                brightnesses[i] += curr_img[row][col]
+            min = min(brightnesses)
+            res = []
+            for i in range(NUM_OPTIONS):
+                if brightnesses[i] > MARKED_THRESH * min:
+                    res.append(i)
+            if len(res) == 0:
+                res = None
+            elif len(res) == 1:
+                res = res[0]
+
+
+
+
 
 
 if __name__ == "__main__":

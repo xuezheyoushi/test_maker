@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="cd6a0434-ab39-4eb9-b754-d14d475c584c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scanner.py" afterPath="$PROJECT_DIR$/scanner.py" />
     </list>
     <ignored path="test_maker.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -321,7 +320,14 @@
       <option name="project" value="LOCAL" />
       <updated>1484969726679</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="ide test">
+      <created>1484971839231</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1484971839231</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">

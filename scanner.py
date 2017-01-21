@@ -5,6 +5,7 @@ import pylab as pl
 from pylibdmtx.pylibdmtx import decode
 
 
+REF_PT_RATI0 =1.053
 NUM_OPTIONS = 5
 MARKED_THRESH = 1.5
 
@@ -59,6 +60,10 @@ class RawPhoto:
             print("WARNING: %d papers not detected." % (num_paper - 1 - i))
 
     def get_refs(self, approx):
+
+        # The following code look ugly but it is actually the clearest way I
+        # can think of.
+
         # Define cornor points
         A = approx[0][0]
         B = approx[1][0]
@@ -69,11 +74,15 @@ class RawPhoto:
         F = (int((B[0] + C[0]) / 2), int((B[1] + C[1]) / 2))
         G = (int((C[0] + D[0]) / 2), int((C[1] + D[1]) / 2))
         H = (int((D[0] + A[0]) / 2), int((D[1] + A[1]) / 2))
-        # Define ref points
-        I = int(G[0] + 1.053 * (E[0] - G[0])), int(G[1] + 1.053 * (E[1] - G[1]))
-        J = int(H[0] + 1.053 * (F[0] - H[0])), int(H[1] + 1.053 * (F[1] - H[1]))
-        K = int(E[0] + 1.053 * (G[0] - E[0])), int(E[1] + 1.053 * (G[1] - E[1]))
-        L = int(F[0] + 1.053 * (H[0] - F[0])), int(F[1] + 1.053 * (H[1] - F[1]))
+        # Define ref points (points just a bit outside the mid points)
+        I = (int(G[0] + REF_PT_RATI0 * (E[0] - G[0])),
+             int(G[1] + REF_PT_RATI0 * (E[1] - G[1])))
+        J = (int(H[0] + REF_PT_RATI0 * (F[0] - H[0])),
+             int(H[1] + REF_PT_RATI0 * (F[1] - H[1])))
+        K = (int(E[0] + REF_PT_RATI0 * (G[0] - E[0])),
+             int(E[1] + REF_PT_RATI0 * (G[1] - E[1])))
+        L = (int(F[0] + REF_PT_RATI0 * (H[0] - F[0])),
+             int(F[1] + REF_PT_RATI0 * (H[1] - F[1])))
         # Check brightnesses
         brightnesses = []
         offset = int(0.012 * ((A[0] - B[0]) ** 2 + (A[1] - B[1]) ** 2) ** 0.5)
@@ -103,11 +112,13 @@ class PaperScan:
     th_inv = None
     test_id = None
     paper_id = None
+    correct_ans = []
     ans_imgs = []
     num_questions = 60
     name_img = None
     class_img = None
-    marked_ans = None
+    marked_ans = []
+    percent = -1
 
 
     def __init__(self, paper_img, num_questions=60):
@@ -116,6 +127,11 @@ class PaperScan:
         self.th_inv = cv2.adaptiveThreshold(paper_img, 255,
                                             cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             1, 29, 8)
+        # 255: starting threshold - set to max for adaptive thresholding
+        # 1: some sort of flag
+        # 29: how wide the mask is
+        # 8: +ve offset of brightness
+
         self.th = 255 - self.th_inv
         self.read_datamatrix()
         self.name_img = self.th[122:180, 120:480]
@@ -236,9 +252,35 @@ class PaperScan:
                 res = None
             elif len(res) == 1:
                 res = res[0]
+            self.marked_ans.append(res)
+
+    def get_test_info(self):
+        pass
+        # TODO
+
+    def grade(self, grading_function=None):
+        if len(self.correct_ans) == 0:
+            print("No standard answer found")
+            # TODO
+        if grading_function == None:
+            self.default_grading()
+        else:
+            pass
+            # TODO
 
 
-
+    def default_grading(self, toPrint=False):
+        # TODO: multiple answers
+        sum = 0
+        for i in range(len(self.correct_ans)):
+            if self.correct_ans[i] == self.marked_ans[i]:
+                sum += 1
+        percent = float(sum) / len(self.correct_ans)
+        if toPrint:
+            print("Grade of paper id %s is %d / %d. Percentage mark: %2f"
+                  % (self.paper_id, sum, len(self.correct_ans), percent))
+        self.percent = percent
+        return percent
 
 
 
@@ -249,3 +291,5 @@ if __name__ == "__main__":
     rp.get_papers(4, 22)
     rp.paper_objs[1].segment()
     rp.paper_objs[1].remove_edges()
+    rp.paper_objs[1].read_filled_answers()
+    print(rp.paper_objs[1].marked_ans)
